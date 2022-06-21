@@ -58,9 +58,14 @@
 #endif
 
 // Math Constants
+
+/// PI
 constexpr float M_PI = 3.14159265358979323846f;
+/// 1 / sqrt(3)
 constexpr float one_by_sqrt3 = 0.57735026919f;
+/// 2 / sqrt(3)
 constexpr float two_by_sqrt3 = 1.15470053838f;
+/// sqrt(3) / 2
 constexpr float sqrt3_by_2 = 0.86602540378f;
 
 // Function prototypes for implementations in utils.cpp

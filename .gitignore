@@ -65,3 +65,6 @@ GUI/node_modules
 GUI/build
 
 docs/reStructuredText/_build/
+
+# Dodo alive ignored files
+.project
