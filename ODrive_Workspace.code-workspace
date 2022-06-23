@@ -11,6 +11,9 @@
 		},
 		{
 			"path": "analysis"
+		},
+		{
+			"path": "dodo"
 		}
 	],
 	"settings": {
@@ -102,6 +105,7 @@
 			"charconv": "cpp",
 			"image": "cpp",
 			"imageutils": "cpp"
-		}
+		},
+		"workbench.colorTheme": "Pale Fire"
 	}
 }
