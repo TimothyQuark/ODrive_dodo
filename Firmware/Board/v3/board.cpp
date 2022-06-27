@@ -154,8 +154,10 @@ std::array<Axis, AXIS_COUNT> axes{{
     },
 }};
 
+// pass other global objects here for usage inside the Dodo class;
+// e.g. axis0 or motor0. we might need to move this line down so we can
+// access all objects we need
 Dodo dodo = Dodo();
-
 
 #if (HW_VERSION_MINOR == 1) || (HW_VERSION_MINOR == 2)
 Stm32Gpio gpios[] = {
