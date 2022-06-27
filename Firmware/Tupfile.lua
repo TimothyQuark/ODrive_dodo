@@ -74,6 +74,7 @@ odrive_firmware_pkg = {
         'MotorControl/arm_cos_f32.c',
         'MotorControl/low_level.cpp',
         'MotorControl/axis.cpp',
+        'MotorControl/dodo.cpp',
         'MotorControl/motor.cpp',
         'MotorControl/thermistor.cpp',
         'MotorControl/encoder.cpp',
@@ -93,7 +94,7 @@ odrive_firmware_pkg = {
         'Drivers/STM32/stm32_nvm.c',
         'Drivers/STM32/stm32_spi_arbiter.cpp',
         'communication/can/can_simple.cpp',
-        'communication/can/odrive_can.cpp',    
+        'communication/can/odrive_can.cpp',
         'communication/communication.cpp',
         'communication/ascii_protocol.cpp',
         'communication/interface_uart.cpp',
@@ -363,7 +364,7 @@ elseif boards[boardversion] == nil then
 end
 board = boards[boardversion]
 
--- --not 
+-- --not
 -- TODO: remove this setting
 if tup.getconfig("USB_PROTOCOL") ~= "native" and tup.getconfig("USB_PROTOCOL") ~= "" then
     error("CONFIG_USB_PROTOCOL is deprecated")

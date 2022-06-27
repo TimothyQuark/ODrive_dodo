@@ -89,7 +89,10 @@ using TOpAmp = Drv8301;
 #include <MotorControl/motor.hpp>
 #include <MotorControl/encoder.hpp>
 
+#include <dodo.hpp>
+
 extern std::array<Axis, AXIS_COUNT> axes;
+extern Dodo dodo;
 extern Motor motors[AXIS_COUNT];
 extern OnboardThermistorCurrentLimiter fet_thermistors[AXIS_COUNT];
 extern Encoder encoders[AXIS_COUNT];

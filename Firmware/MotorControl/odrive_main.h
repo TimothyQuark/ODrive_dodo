@@ -90,11 +90,11 @@ struct BoardConfig_t {
      * If enabled, if the measured DC voltage exceeds `dc_bus_overvoltage_ramp_start`,
      * the ODrive will sink more power than usual into the the brake resistor
      * in an attempt to bring the voltage down again.
-     * 
+     *
      * The brake duty cycle is increased by the following amount:
      *  vbus_voltage == dc_bus_overvoltage_ramp_start  =>  brake_duty_cycle += 0%
      *  vbus_voltage == dc_bus_overvoltage_ramp_end  =>  brake_duty_cycle += 100%
-     * 
+     *
      * Remarks:
      *  - This feature is active even when all motors are disarmed.
      *  - This feature is disabled if `brake_resistance` is non-positive.
@@ -154,6 +154,7 @@ inline ENUMTYPE operator ~ (ENUMTYPE a) { return static_cast<ENUMTYPE>(~static_c
 #include <oscilloscope.hpp>
 #include <communication/communication.h>
 #include <communication/can/odrive_can.hpp>
+#include <dodo.hpp>
 
 // Defined in autogen/version.c based on git-derived version numbers
 extern "C" {
@@ -191,6 +192,7 @@ public:
     void control_loop_cb(uint32_t timestamp);
 
     Axis& get_axis(int num) { return axes[num]; }
+    Dodo& get_dodo() { return dodo; }
 
     uint32_t get_interrupt_status(int32_t irqn);
     uint32_t get_dma_status(uint8_t stream_num);
