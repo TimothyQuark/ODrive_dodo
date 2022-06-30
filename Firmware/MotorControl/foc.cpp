@@ -1,31 +1,48 @@
 
 #include "foc.hpp"
+
 #include <board.h>
 
 Motor::Error AlphaBetaFrameController::on_measurement(
-            std::optional<float> vbus_voltage,
-            std::optional<std::array<float, 3>> currents,
-            uint32_t input_timestamp) {
+    std::optional<float> vbus_voltage,
+    std::optional<std::array<float, 3>> currents,
+    uint32_t input_timestamp) {
+    // std::optional<float2D> Ialpha_beta;
 
+    // if (currents.has_value()) {
+    //     // Clarke transform
+    //     Ialpha_beta = {
+    //         (*currents)[0],
+    //         one_by_sqrt3 * ((*currents)[1] - (*currents)[2])};
+    // }
+
+    // Where we store the alpha beta currents
     std::optional<float2D> Ialpha_beta;
-    
+
+    // Dodo Clarke transform.
     if (currents.has_value()) {
-        // Clarke transform
+        // Only transform if the ODrive actually measured the motor phase currents
+
+        // C = 2/3
+        // C constant used for FOC, as described in https://link.springer.com/book/10.1007/978-3-8348-2050-1
+        // The actual value of C does not matter, so long as it used for all the transforms
         Ialpha_beta = {
-            (*currents)[0],
-            one_by_sqrt3 * ((*currents)[1] - (*currents)[2])
-        };
+            // Alpha
+            div_2_by_3 * currents.value()[0] - div_1_by_3 * (currents.value()[1] - currents.value()[2]),
+            // Beta
+            one_by_sqrt3 * (currents.value()[1] - currents.value()[2])};
     }
-    
+
+    // This function overload can be found lower down in this file.
     return on_measurement(vbus_voltage, Ialpha_beta, input_timestamp);
 }
 
 Motor::Error AlphaBetaFrameController::get_output(
-            uint32_t output_timestamp, float (&pwm_timings)[3],
-            std::optional<float>* ibus) {
+    uint32_t output_timestamp, float (&pwm_timings)[3],
+    std::optional<float>* ibus) {
     std::optional<float2D> mod_alpha_beta;
     Motor::Error status = get_alpha_beta_output(output_timestamp, &mod_alpha_beta, ibus);
-    
+
     if (status != Motor::ERROR_NONE) {
         return status;
     } else if (!mod_alpha_beta.has_value() || is_nan(mod_alpha_beta->first) || is_nan(mod_alpha_beta->second)) {
@@ -53,8 +70,8 @@ void FieldOrientedController::reset() {
 }
 
 Motor::Error FieldOrientedController::on_measurement(
-        std::optional<float> vbus_voltage, std::optional<float2D> Ialpha_beta,
-        uint32_t input_timestamp) {
+    std::optional<float> vbus_voltage, std::optional<float2D> Ialpha_beta,
+    uint32_t input_timestamp) {
     // Store the measurements for later processing.
     i_timestamp_ = input_timestamp;
     vbus_voltage_measured_ = vbus_voltage;
@@ -63,10 +80,10 @@ Motor::Error FieldOrientedController::on_measurement(
     return Motor::ERROR_NONE;
 }
 
+// TODO: Next part of Dodo FOC implementation
 ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
-        uint32_t output_timestamp, std::optional<float2D>* mod_alpha_beta,
-        std::optional<float>* ibus) {
-
+    uint32_t output_timestamp, std::optional<float2D>* mod_alpha_beta,
+    std::optional<float>* ibus) {
     if (!vbus_voltage_measured_.has_value() || !Ialpha_beta_measured_.has_value()) {
         // FOC didn't receive a current measurement yet.
         return Motor::ERROR_CONTROLLER_INITIALIZING;
@@ -102,15 +119,13 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
         float s_I = our_arm_sin_f32(I_phase);
         Idq = {
             c_I * Ialpha + s_I * Ibeta,
-            c_I * Ibeta - s_I * Ialpha
-        };
+            c_I * Ibeta - s_I * Ialpha};
         Id_measured_ += I_measured_report_filter_k_ * (Idq->first - Id_measured_);
         Iq_measured_ += I_measured_report_filter_k_ * (Idq->second - Iq_measured_);
     } else {
         Id_measured_ = 0.0f;
         Iq_measured_ = 0.0f;
     }
-
 
     float mod_to_V = (2.0f / 3.0f) * vbus_voltage;
     float V_to_mod = 1.0f / mod_to_V;
@@ -177,7 +192,7 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
         *ibus = mod_d * Id + mod_q * Iq;
         power_ = vbus_voltage * (*ibus).value();
     }
-    
+
     return Motor::ERROR_NONE;
 }
 

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <stdint.h>
-#include <limits>
+
 #include <algorithm>
 #include <array>
-#include <tuple>
 #include <cmath>
+#include <limits>
+#include <tuple>
 
 /**
  * @brief Flash size register address
@@ -47,10 +48,10 @@
 #define STM_ID_GetRevision() (*(uint16_t *)(ID_DBGMCU_IDCODE + 2))
 
 /**
-* "Returns" the Flash size
-*
-* Returned data is in 16-bit mode, returned value is flash size in kB (kilo bytes).
-*/
+ * "Returns" the Flash size
+ *
+ * Returned data is in 16-bit mode, returned value is flash size in kB (kilo bytes).
+ */
 #define STM_ID_GetFlashSize() (*(uint16_t *)(ID_FLASH_ADDRESS))
 
 #ifdef M_PI
@@ -60,13 +61,17 @@
 // Math Constants
 
 /// PI
-constexpr float M_PI = 3.14159265358979323846f;
+constexpr float M_PI{3.14159265358979323846f};
 /// 1 / sqrt(3)
-constexpr float one_by_sqrt3 = 0.57735026919f;
+constexpr float one_by_sqrt3{0.57735026919f};
 /// 2 / sqrt(3)
-constexpr float two_by_sqrt3 = 1.15470053838f;
+constexpr float two_by_sqrt3{1.15470053838f};
 /// sqrt(3) / 2
-constexpr float sqrt3_by_2 = 0.86602540378f;
+constexpr float sqrt3_by_2{0.86602540378f};
+// 2 / 3
+constexpr float div_2_by_3{2.0f / 3.0f};
+// 1 / 3
+constexpr float div_1_by_3{1.0f / 3.0f};
 
 // Function prototypes for implementations in utils.cpp
 std::tuple<float, float, float, bool> SVM(float alpha, float beta);
@@ -85,8 +90,8 @@ float our_arm_cos_f32(float x);
 // ----------------
 // Inline functions
 
-template<typename T>
-constexpr T SQ(const T& x){
+template <typename T>
+constexpr T SQ(const T &x) {
     return x * x;
 }
 
@@ -103,8 +108,7 @@ std::array<T, 1 + sizeof...(Tail)> make_array(T head, Tail... tail) {
 
 // To allow use of -ffast-math we need to have a special check for nan
 // that bypasses the "ignore nan" flag
-__attribute__((optimize("-fno-finite-math-only")))
-inline bool is_nan(float x) {
+__attribute__((optimize("-fno-finite-math-only"))) inline bool is_nan(float x) {
     return __builtin_isnan(x);
 }
 
@@ -114,8 +118,8 @@ inline int round_int(float x) {
 #ifdef __arm__
     int res;
     asm("vcvtr.s32.f32   %[res], %[x]"
-        : [res] "=X" (res)
-        : [x] "w" (x) );
+        : [res] "=X"(res)
+        : [x] "w"(x));
     return res;
 #else
     return (int)nearbyint(x);
@@ -156,7 +160,7 @@ inline float horner_poly_eval(float x, const float *coeffs, size_t count) {
 }
 
 // Modulo (as opposed to remainder), per https://stackoverflow.com/a/19288271
-inline int mod(const int dividend, const int divisor){
+inline int mod(const int dividend, const int divisor) {
     int r = dividend % divisor;
     if (r < 0) r += divisor;
     return r;

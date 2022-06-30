@@ -120,6 +120,9 @@ public:
     float dc_calib_running_since_ = 0.0f; // current sensor calibration needs some time to settle
     float I_bus_ = 0.0f; // this motors contribution to the bus current
     float phase_current_rev_gain_ = 0.0f; // Reverse gain for ADC to Amps (to be set by DRV8301_setup)
+
+    // Dodo: The Motor class has an FOC class inside it, use this in the yaml file
+    // to obtain FOC data
     FieldOrientedController current_control_;
     float effective_current_lim_ = 10.0f; // [A]
     float max_allowed_current_ = 0.0f; // [A] set in setup()
