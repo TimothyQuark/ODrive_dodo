@@ -241,6 +241,8 @@ interfaces:
   ODrive.Dodo:
     c_is_class: True
     attributes:
+      Ialpha: {type: readonly float32, c_getter: 'foc_.i_alpha'}
+      Ibeta: {type: readonly float32, c_getter: 'foc_.i_beta'}
       test_val:
         type: uint32
         brief: just a test
