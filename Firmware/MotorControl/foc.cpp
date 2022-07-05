@@ -20,12 +20,13 @@ Motor::Error AlphaBetaFrameController::on_measurement(
     std::optional<float2D> Ialpha_beta;
 
     // Dodo Clarke transform.
+    // --- Start
     if (currents.has_value()) {
         // Only transform if the ODrive actually measured the motor phase currents
 
         // C = 2/3
         // C constant used for FOC, as described in https://link.springer.com/book/10.1007/978-3-8348-2050-1
-        // The actual value of C does not matter, so long as it used for all the transforms
+        // The actual value of C matters for the inverse Clarke Transform, see utils.hpp
         Ialpha_beta = {
             // Alpha
             div_2_by_3 * currents.value()[0] - div_1_by_3 * (currents.value()[1] - currents.value()[2]),
@@ -35,6 +36,7 @@ Motor::Error AlphaBetaFrameController::on_measurement(
 
     // This function overload can be found lower down in this file.
     return on_measurement(vbus_voltage, Ialpha_beta, input_timestamp);
+    // --- End
 }
 
 Motor::Error AlphaBetaFrameController::get_output(
@@ -77,10 +79,11 @@ Motor::Error FieldOrientedController::on_measurement(
     vbus_voltage_measured_ = vbus_voltage;
     Ialpha_beta_measured_ = Ialpha_beta;
 
+    // DODO TODO: Also update the Idq from FOC calculations.
+
     return Motor::ERROR_NONE;
 }
 
-// TODO: Next part of Dodo FOC implementation
 ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
     uint32_t output_timestamp, std::optional<float2D>* mod_alpha_beta,
     std::optional<float>* ibus) {
@@ -109,29 +112,67 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
     float phase_vel = *phase_vel_;
     float vbus_voltage = *vbus_voltage_measured_;
 
+    // Idq.has_value() will return false if this has not been filled in by the Park Transform code
+    // (i.e. no Ialpha_beta was measured)
+    // This is used in other parts of the code for error checking.
     std::optional<float2D> Idq;
 
-    // Park transform
+    // // Park transform
+    // if (Ialpha_beta_measured_.has_value()) {
+    //     auto [Ialpha, Ibeta] = *Ialpha_beta_measured_;
+    //     float I_phase = phase + phase_vel * ((float)(int32_t)(i_timestamp_ - ctrl_timestamp_) / (float)TIM_1_8_CLOCK_HZ);
+    //     float c_I = our_arm_cos_f32(I_phase);
+    //     float s_I = our_arm_sin_f32(I_phase);
+    //     Idq = {
+    //         c_I * Ialpha + s_I * Ibeta,
+    //         c_I * Ibeta - s_I * Ialpha};
+    //     // Dodo: wtf is this code below. I_measured_report_filter_k_ = 1.0 in header, so this calculation undoes itself
+    //     Id_measured_ += I_measured_report_filter_k_ * (Idq->first - Id_measured_);
+    //     Iq_measured_ += I_measured_report_filter_k_ * (Idq->second - Iq_measured_);
+    // } else {
+    //     Id_measured_ = 0.0f;
+    //     Iq_measured_ = 0.0f;
+    // }
+
+    // Dodo Park Transform
+    // --- Start
     if (Ialpha_beta_measured_.has_value()) {
-        auto [Ialpha, Ibeta] = *Ialpha_beta_measured_;
-        float I_phase = phase + phase_vel * ((float)(int32_t)(i_timestamp_ - ctrl_timestamp_) / (float)TIM_1_8_CLOCK_HZ);
-        float c_I = our_arm_cos_f32(I_phase);
-        float s_I = our_arm_sin_f32(I_phase);
+        auto [Ialpha, Ibeta] = Ialpha_beta_measured_.value();
+
+        // Calculate the current phase (not measured, calculated using the hardware clock)
+        float I_phase = phase + phase_vel * static_cast<float>(i_timestamp_ - ctrl_timestamp_) / static_cast<float>(TIM_1_8_CLOCK_HZ);
+
+        // Calculate cos(phase) and sin(phase). Since this is a small embedded system, it uses a custom made library for this
+        float cos_phase = our_arm_cos_f32(I_phase);
+        float sin_phase = our_arm_sin_f32(I_phase);
+
+        // Idq itself is used in other parts of the code for error checking, hence we will keep it even if
+        // this struct is pretty useless in the Park Transform
         Idq = {
-            c_I * Ialpha + s_I * Ibeta,
-            c_I * Ibeta - s_I * Ialpha};
-        Id_measured_ += I_measured_report_filter_k_ * (Idq->first - Id_measured_);
-        Iq_measured_ += I_measured_report_filter_k_ * (Idq->second - Iq_measured_);
+            // Id
+            Ialpha * cos_phase + Ibeta * sin_phase,
+            // Iq
+            -Ialpha * sin_phase + Ibeta * cos_phase};
+
+        // Copy Idq values to FieldOrientedController class variables.
+        Id_measured_ = Idq->first;
+        Iq_measured_ = Idq->second;
+
     } else {
+        // No Ialpha_beta measured, so use default values
         Id_measured_ = 0.0f;
         Iq_measured_ = 0.0f;
     }
 
     float mod_to_V = (2.0f / 3.0f) * vbus_voltage;
     float V_to_mod = 1.0f / mod_to_V;
+    // FOC (i.e. the transforms we did above) do not actually do any control. Instead, current or voltage
+    // control will modify Idq currents, i.e. modulate Idq
     float mod_d;
     float mod_q;
+    // --- End
 
+    // DODO TODO: Write our own current control logic
     if (enable_current_control_) {
         // Current control mode
 
@@ -174,12 +215,25 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
         mod_q = V_to_mod * Vq;
     }
 
-    // Inverse park transform
-    float pwm_phase = phase + phase_vel * ((float)(int32_t)(output_timestamp - ctrl_timestamp_) / (float)TIM_1_8_CLOCK_HZ);
-    float c_p = our_arm_cos_f32(pwm_phase);
-    float s_p = our_arm_sin_f32(pwm_phase);
-    float mod_alpha = c_p * mod_d - s_p * mod_q;
-    float mod_beta = c_p * mod_q + s_p * mod_d;
+    // // Inverse park transform
+    // float pwm_phase = phase + phase_vel * ((float)(int32_t)(output_timestamp - ctrl_timestamp_) / (float)TIM_1_8_CLOCK_HZ);
+    // float c_p = our_arm_cos_f32(pwm_phase);
+    // float s_p = our_arm_sin_f32(pwm_phase);
+    // float mod_alpha = c_p * mod_d - s_p * mod_q;
+    // float mod_beta = c_p * mod_q + s_p * mod_d;
+
+    // Dodo Inverse Park Transform
+    // --- Start
+    // PWM Phase. Note this is not the same as the phase calculated in the Park Transform
+    float pwm_phase = phase + phase_vel * static_cast<float>(output_timestamp - ctrl_timestamp_) / static_cast<float>(TIM_1_8_CLOCK_HZ);
+    float cos_pwm = our_arm_cos_f32(pwm_phase);
+    float sin_pwm = our_arm_sin_f32(pwm_phase);
+
+    // We do not use the raw transformed values of Idq. Instead we use the modulated values, which have been modified
+    // either by current or voltage control (see above)
+    float mod_alpha = cos_pwm * mod_d - sin_pwm * mod_q;
+    float mod_beta = sin_pwm * mod_d + cos_pwm * mod_q;
+    // --- End
 
     // Report final applied voltage in stationary frame (for sensorless estimator)
     final_v_alpha_ = mod_to_V * mod_alpha;
@@ -197,6 +251,7 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
 }
 
 void FieldOrientedController::update(uint32_t timestamp) {
+    // DODO TODO: Update our important variables that we want to send to user.
     CRITICAL_SECTION() {
         ctrl_timestamp_ = timestamp;
         enable_current_control_ = enable_current_control_src_;
