@@ -813,6 +813,22 @@ interfaces:
       current_control:
         c_is_class: True
         attributes:
+          Dodo_Ialpha_measured: {
+            type: readonly float32, 
+            c_getter: 'Ialpha_beta_measured_.value_or(float2D{0.0f, 0.0f}).first'
+            }
+          Dodo_Ibeta_measured: {
+            type: readonly float32, 
+            c_getter: 'Ialpha_beta_measured_.value_or(float2D{0.0f, 0.0f}).second'
+            }
+          Dodo_Id_measured: {
+            type: readonly float32, 
+            c_getter: 'Id_measured_'
+            }
+          Dodo_Iq_measured: {
+            type: readonly float32,
+             c_getter: 'Iq_measured_'
+             }
           p_gain: {type: readonly float32, c_getter: 'pi_gains_.value_or(float2D{0.0f, 0.0f}).first'}
           i_gain: {type: readonly float32, c_getter: 'pi_gains_.value_or(float2D{0.0f, 0.0f}).second'}
           I_measured_report_filter_k: float32
