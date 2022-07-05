@@ -9,20 +9,20 @@ from fibre.libfibre import ObjectLostError
 
 def get_args():
     parser = argparse.ArgumentParser(allow_abbrev=False)
-    parser.add_argument('--config', help='motor config module', default='config_1')
+    parser.add_argument('--config', help='motor config module', default='config_antigravity4004')
     return parser.parse_args()
 
 def main():
     args = get_args()
     config = importlib.import_module(args.config)
     mgr = ODriveManager()
-    save_config(mgr, config)
+    save_config(mgr, config, args.config)
     print('done')
 
-def save_config(mgr, config):
+def save_config(mgr, config, config_str: str):
     print('(1/3) erasing old config')
     mgr.erase_config()
-    print('(2/3) setting new config')
+    print('(2/3) setting new config ({})'.format(config_str))
     mgr.set_config(config)
     print('(3/3) saving new config')
     mgr.save_config()
