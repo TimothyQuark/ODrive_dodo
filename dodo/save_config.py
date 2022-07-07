@@ -43,7 +43,7 @@ class ODriveManager:
         try:
             self.odrv.erase_configuration()  # causes reboot
         except ObjectLostError:
-            print('reboot')
+            print('reboot (erase config)')
             self.odrv = None
 
     def set_config(self, config):
@@ -55,7 +55,7 @@ class ODriveManager:
         try:
             self.odrv.save_configuration()  # causes reboot
         except ObjectLostError:
-            print('reboot')
+            print('reboot (saveconfig')
             self.odrv = None
 
 if __name__ == '__main__':

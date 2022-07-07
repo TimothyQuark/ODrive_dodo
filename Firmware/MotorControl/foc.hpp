@@ -33,7 +33,7 @@ class FieldOrientedController : public AlphaBetaFrameController, public Componen
     std::optional<float2D> pi_gains_;  // [V/A, V/As] should be auto set after resistance and inductance measurement
     // Dodo: This seems to be some filter constant. It is set to 1.0 here so has no effect on any calculations,
     // but we will keep it in our code just in case. It seems to be some sort of legacy code used in their Park
-    // transform, and is redundant.
+    // transform. You can set it manually with ODrive commands from your computer, but we have removed it.
     float I_measured_report_filter_k_ = 1.0f;
 
     // Inputs
