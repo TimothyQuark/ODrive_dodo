@@ -31,7 +31,13 @@ def set(odrv0):
     odrv0.axis0.motor.config.current_lim = 10
     odrv0.axis0.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
     odrv0.axis0.motor.config.pole_pairs = 12
-    odrv0.axis0.motor.config.resistance_calib_max_voltage = 4
+    # resistance_calib_max_voltage should be set to 4 usually. However, the
+    # motor heats up when idle (it should not, but it does), and this increases
+    # the internal resistance of the motor. This value sets the max V that can be applied,
+    # to motor during calibration, and 4 is too low when the motor is hot.
+    # You can check this by checking current draw of power supply during idle,
+    # if it is higher than 42mA then the motor is probably heating up
+    odrv0.axis0.motor.config.resistance_calib_max_voltage = 6
     odrv0.axis0.motor.config.torque_constant = 8.27 / 300
 
     # Axis 1 (Board controls 2 motors, dodo legs have 2 motors)
@@ -48,5 +54,5 @@ def set(odrv0):
     odrv0.axis1.motor.config.current_lim = 10
     odrv0.axis1.motor.config.motor_type = MOTOR_TYPE_HIGH_CURRENT
     odrv0.axis1.motor.config.pole_pairs = 12
-    odrv0.axis1.motor.config.resistance_calib_max_voltage = 4
+    odrv0.axis1.motor.config.resistance_calib_max_voltage = 6
     odrv0.axis1.motor.config.torque_constant = 8.27 / 300
