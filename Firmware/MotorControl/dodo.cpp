@@ -1,10 +1,9 @@
 #include "dodo.hpp"
 
-Dodo::Dodo() {
-}
+// Dodo::Dodo() {
+// }
 
+// Example of a function that can be called from the API.
 void Dodo::test_incr() {
     test_val_ += 1;
-    // foc_.i_alpha += 1.0f;
-    // foc_.i_beta += 1.0f;
 }

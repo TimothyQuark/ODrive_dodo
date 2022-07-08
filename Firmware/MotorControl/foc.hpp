@@ -19,11 +19,21 @@ class FieldOrientedController : public AlphaBetaFrameController, public Componen
 
     void reset() final;
 
+    /* 
+    This function does not do anything except copy Ialpha_beta values to
+    the FieldOrientedController class. The Clarke Transform from motor
+    phase currents to Ialpha_beta is done by AlphaBetaFrameController::on_measurement,
+    which is defined in foc.cpp for some reason.
+    */
     ODriveIntf::MotorIntf::Error on_measurement(
         std::optional<float> vbus_voltage,
         std::optional<float2D> Ialpha_beta,
         uint32_t input_timestamp) final;
 
+    /*
+    Converts Ialpha_beta to Idq using Park Transform. Then does either current
+    or voltage control, before transforming back to Iab with Inverse Park Transform.
+    */
     ODriveIntf::MotorIntf::Error get_alpha_beta_output(
         uint32_t output_timestamp,
         std::optional<float2D>* mod_alpha_beta,
@@ -31,6 +41,7 @@ class FieldOrientedController : public AlphaBetaFrameController, public Componen
 
     // Config - these values are set while this controller is inactive
     std::optional<float2D> pi_gains_;  // [V/A, V/As] should be auto set after resistance and inductance measurement
+    
     // Dodo: This seems to be some filter constant. It is set to 1.0 here so has no effect on any calculations,
     // but we will keep it in our code just in case. It seems to be some sort of legacy code used in their Park
     // transform. You can set it manually with ODrive commands from your computer, but we have removed it.

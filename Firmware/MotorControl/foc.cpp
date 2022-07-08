@@ -30,6 +30,8 @@ Motor::Error AlphaBetaFrameController::on_measurement(
         // The actual value of C matters for the inverse Clarke Transform, see utils.hpp
         Ialpha_beta = {
             // Alpha
+            // DODO TODO: No idea why they use this calculation for alpha calculation
+            // if you don't use it FOC seems to break.
             currents.value()[0],
             // div_2_by_3 * currents.value()[0] - div_1_by_3 * (currents.value()[1] - currents.value()[2]),
             // Beta
@@ -54,6 +56,9 @@ Motor::Error AlphaBetaFrameController::get_output(
         return Motor::ERROR_MODULATION_IS_NAN;
     }
 
+    // Perform Space Vector Modulation, as described in https://en.wikipedia.org/wiki/Space_vector_modulation
+    // Technically, this is also where the inverse Clarke Transform occurs, but they
+    // jump directly to controlling the MOSFETs via pwm timings
     auto [tA, tB, tC, success] = SVM(mod_alpha_beta->first, mod_alpha_beta->second);
     if (!success) {
         return Motor::ERROR_MODULATION_MAGNITUDE;
@@ -108,6 +113,7 @@ ODriveIntf::MotorIntf::Error FieldOrientedController::get_alpha_beta_output(
         return Motor::ERROR_UNKNOWN_VBUS_VOLTAGE;
     }
 
+    // DODO TODO: Use .value() instead of raw pointers
     auto [Vd, Vq] = *Vdq_setpoint_;
     float phase = *phase_;
     float phase_vel = *phase_vel_;
