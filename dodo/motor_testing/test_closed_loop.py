@@ -5,6 +5,7 @@ import argparse
 import odrive
 from odrive.enums import AXIS_STATE_CLOSED_LOOP_CONTROL
 
+# Short script to run the closed loop test. Takes as argument number of motor turns
 
 def get_args():
     parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -15,7 +16,8 @@ def main():
     args = get_args()
     print('searching odrive ... ', end='')
     odrv0 = odrive.find_any()
-    print('found')
+    if odrv0:
+        print('found')
     odrv0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
     odrv0.axis0.controller.input_pos = args.turns
 

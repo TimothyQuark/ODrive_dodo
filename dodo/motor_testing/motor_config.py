@@ -6,6 +6,8 @@ import importlib
 import odrive
 from fibre.libfibre import ObjectLostError
 
+# Script which parses a motor configuration (ex. config_antigravity4004),
+# and configures the ODrive.
 
 def get_args():
     parser = argparse.ArgumentParser(allow_abbrev=False)
@@ -35,7 +37,8 @@ class ODriveManager:
         if self.odrv is not None:
             return
         print('searching odrive ... ', end='')
-        self.odrv = odrive.find_any()
+        if self.odrv:
+            self.odrv = odrive.find_any()
         print('found')
 
     def erase_config(self):
