@@ -14,12 +14,15 @@ def get_args():
 
 def main():
     args = get_args()
+    run(args.turns)
+
+def run(num_turns):
     print('searching odrive ... ', end='')
     odrv0 = odrive.find_any()
     if odrv0:
         print('found')
     odrv0.axis0.requested_state = AXIS_STATE_CLOSED_LOOP_CONTROL
-    odrv0.axis0.controller.input_pos = args.turns
+    odrv0.axis0.controller.input_pos = num_turns
 
 if __name__ == '__main__':
     main()
