@@ -37,9 +37,9 @@ class ODriveManager:
         if self.odrv is not None:
             return
         print('searching odrive ... ', end='')
+        self.odrv = odrive.find_any()
         if self.odrv:
-            self.odrv = odrive.find_any()
-        print('found')
+            print('found')
 
     def erase_config(self):
         self._find_if_needed()
